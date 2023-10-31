@@ -20,19 +20,23 @@ def proxy():
     return "Invalid URL scheme"
 
         url = request.args.get('url')
-        
-        
-        # CVE-2020-7212 - parse_url() -> _encode_invalid_chars()
-        # CVE-2021-33503 - parse_url()
-       # host = parse_url(url ).host
-        
-        # if host not in ALLOWED_HOSTS:
-        #      return "Not allowed"
 
-       
-        r = requests.get(url)
- 
-        soup = BeautifulSoup(r.text, 'html.parser')
+parsed_url = urlparse(url)
+
+if parsed_url.scheme not in allowed_schemes:
+    return "Invalid URL scheme"
+
+if parsed_url.hostname not in allowed_hosts:
+    return "Not allowed"
+
+try:
+    response = requests.get(url)
+    response.raise_for_status()  # Check for HTTP request success
+except requests.exceptions.RequestException as e:
+    return f"Error: {e}"
+
+soup = BeautifulSoup(response.text, 'html.parser')
+
         to_change = soup.find_all(text = re.compile('o'))
         
         for element in to_change:
